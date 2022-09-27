@@ -1,0 +1,74 @@
+---
+title: "p8157_hw1"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(data.table)
+library(Hotelling)
+```
+
+# P8157 - Analysis of Longitudinal Data Homework - 1
+
+## Part A
+
+1. Plasma inorganic phosphate measurements obtained from 13 control and 20 obese patients 0, 0.5, 1, 1.5, 2, 
+and 3 hours after an oral glucose challenge. The investigators intend to test the following hypotheses using 
+Hotelling’s T2 statistic:
+
+(a) To test the null hypothesis that the group means are the same at all six measurement times. 
+
+$H_0: $
+
+
+(b) To test whether the profiles in the two groups are parallel.
+
+$H_0: \textbf{ABC=D}$. Profiles in the two groups are parallel i.e. no group-time interaction, the slopes between 
+each time points are identical between the two groups:
+
+$$
+\mu_{12}-\mu_{11} = \mu_{22} - \mu_{21} \\
+\mu_{13}-\mu_{12} = \mu_{23} - \mu_{22} \\
+...\\
+\mu_{16} - \mu_{15} = \mu_{26} - \mu_{25}
+$$
+
+$$
+\begin{equation*}
+B_{2, 6} = 
+\begin{bmatrix}
+\mu_{11} & \mu_{12} & ... & \mu_{16} \\
+\mu_{21} & \mu_{22} & ... & \mu_{26} 
+\end{bmatrix}
+\end{equation*}
+$$
+$$
+\begin{equation*}
+C_{6, 5} = 
+\begin{bmatrix}
+-1 & 0 & ... & 0 \\
+1 & -1 & ... & 0 \\
+0 & 1 & ... & 0 \\
+... \\
+0 & 0 & ... & 1
+\end{bmatrix}
+\end{equation*}
+\\
+$$
+
+(c) To test whether the differences in means at 2 and 3 hours after an oral glucose challenge are different between the control and obese patients.
+
+```{r 1_c}
+
+```
+
+## Part B
+
+
+
+```{r B_1}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
