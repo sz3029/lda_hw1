@@ -1,12 +1,16 @@
 ---
-title: "p8157_hw1"
+title: "P8157 HW1"
 output: pdf_document
+author: Shihui Zhu
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(data.table)
 library(Hotelling)
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
 ```
 
 # P8157 - Analysis of Longitudinal Data Homework - 1
@@ -19,33 +23,69 @@ Hotelling’s T2 statistic:
 
 (a) To test the null hypothesis that the group means are the same at all six measurement times. 
 
-$H_0: $
+$H_0: \textbf{ABC=D}$. The group means are the same at all six measurement times, without assuming parallelism:
 
+\begin{align*}
+\mu_{11} = \mu_{21} \\
+\mu_{12} = \mu_{22} \\
+...\\
+\mu_{16} = \mu_{26}
+\end{align*}
+
+$H_1: \textbf{ABC} \neq \textbf{D}$. The group means are NOT the same for all points in the six measurement times.
+
+The matrices set-up:
+
+\begin{equation*}
+\textbf{B}_{2, 6} = 
+\begin{bmatrix}
+\mu_{11} & \mu_{12} & ... & \mu_{16} \\
+\mu_{21} & \mu_{22} & ... & \mu_{26}
+\end{bmatrix}
+\end{equation*}
+
+\begin{equation*}
+\textbf{C}_{6, 6} = \textbf{I}_6 = 
+\begin{bmatrix}
+1 & 0 & 0 & ... & 0 \\
+0 & 1 & 0 & ... & 0 \\
+0 & 0 & 1 & ... & 0 \\
+... \\
+0 & 0 & 0 & ... & 1
+\end{bmatrix}
+\end{equation*}
+
+\begin{align*}
+\textbf{A}_{1, 2} = [\textbf{I}_{1}, -1_{1}] = [1 -1] \\
+\textbf{D} = \textbf{0}_{1,6}
+\end{align*}
 
 (b) To test whether the profiles in the two groups are parallel.
 
 $H_0: \textbf{ABC=D}$. Profiles in the two groups are parallel i.e. no group-time interaction, the slopes between 
 each time points are identical between the two groups:
 
-$$
+\begin{align*}
 \mu_{12}-\mu_{11} = \mu_{22} - \mu_{21} \\
 \mu_{13}-\mu_{12} = \mu_{23} - \mu_{22} \\
 ...\\
 \mu_{16} - \mu_{15} = \mu_{26} - \mu_{25}
-$$
+\end{align*}
 
-$$
+$H_1: \textbf{ABC} \neq \textbf{D}$. Profiles in the two groups are NOT parallel.
+
+The matrices set-up:
+
 \begin{equation*}
-B_{2, 6} = 
+\textbf{B}_{2, 6} = 
 \begin{bmatrix}
 \mu_{11} & \mu_{12} & ... & \mu_{16} \\
-\mu_{21} & \mu_{22} & ... & \mu_{26} 
+\mu_{21} & \mu_{22} & ... & \mu_{26}
 \end{bmatrix}
 \end{equation*}
-$$
-$$
+
 \begin{equation*}
-C_{6, 5} = 
+\textbf{C}_{6, 5} = 
 \begin{bmatrix}
 -1 & 0 & ... & 0 \\
 1 & -1 & ... & 0 \\
@@ -54,21 +94,174 @@ C_{6, 5} =
 0 & 0 & ... & 1
 \end{bmatrix}
 \end{equation*}
-\\
-$$
+
+\begin{align*}
+\textbf{A}_{1, 2} = [\textbf{I}_{1}, -1_{1}] = [1 -1] \\
+\textbf{D} = \textbf{0}_{1,5}
+\end{align*}
 
 (c) To test whether the differences in means at 2 and 3 hours after an oral glucose challenge are different between the control and obese patients.
 
-```{r 1_c}
+$H_0: \textbf{ABC=D}$. The differences in means at 2 and 3 hours after an oral glucose challenge are the same between the control and obese patients, without assuming parallelism:
 
-```
+$\mu_{16}-\mu_{15} = \mu_{26} - \mu_{25}$
+
+$H_1: \textbf{ABC} \neq \textbf{D}$. The differences in means at 2 and 3 hours after an oral glucose challenge are different between the control and obese patients.
+
+The matrices set-up:
+
+\begin{equation*}
+\textbf{B}_{2, 6} = 
+\begin{bmatrix}
+\mu_{11} & \mu_{12} & ... & \mu_{16} \\
+\mu_{21} & \mu_{22} & ... & \mu_{26}
+\end{bmatrix}
+\end{equation*}
+
+\begin{equation*}
+\textbf{C}_{6, 1} = 
+\begin{bmatrix}
+0 \\
+0 \\
+0 \\
+... \\
+-1 \\
+1
+\end{bmatrix}
+\end{equation*}
+
+\begin{align*}
+\textbf{A}_{1, 2} = [\textbf{I}_{1}, -1_{1}] = [1 -1] \\
+\textbf{D} = 0
+\end{align*}
 
 ## Part B
 
-
+### 1. EDA of the Treatment of Lead-Exposed Children (TLC) trial
 
 ```{r B_1}
-plot(pressure)
+data.TLC <- fread("TLC.dat")
+colnames(data.TLC) <- c("subject_id", "assignment", "week0", "week1", "week4", "week6")
+head(data.TLC)
+
+data.TLC %>% 
+  pivot_longer(cols = starts_with("week"),
+             names_to = "week",
+             names_prefix = "week",
+             values_to = "bll") %>%
+  ggplot(aes(x = week, y = bll, group = assignment, color = assignment)) + 
+  geom_point(alpha = .5) + 
+  geom_path() + 
+  labs(
+    title = "Spaghetti Plot",
+    x = "Time (in weeks)",
+    y = "blood lead levels (micrograms/dL)",
+    caption = "Data from the treatment of Lead- Exposed Children (TLC) trial"
+  ) + 
+  stat_summary(aes(group = 1), geom = "point", fun = mean,
+    shape = 17, size = 3, color = "black") + 
+  facet_grid(.~assignment)
+```
+The triangle in the above plot indicates the group mean at a specific time point. From the spaghetti plot above we found that the profiles among the two groups (A = intervention with succimer, P = Placebo) are not parallel. However, the two groups tend to have similar blood lead level at the baseline. The group treated with succimer tends to have a lower blood lead level compared with the placebo group. The blood lead level of the group treated with succimer tend to have a big drop after 1 week, and it slowly inclines in the following measurements. 
+
+We can perform a two-sample Hotelling's T-sqaured test to check whether there is difference between the group means of the two treatment groups at all 4 measurement time points. 
+
+$H_0:$ The group means of blood lead levels of the two treatment groups are identical at all 4 measurement time points.
+
+\begin{align*}
+\mu_{11} = \mu_{21} \\
+\mu_{12} = \mu_{22} \\
+\mu_{13} = \mu_{23}
+\mu_{14} = \mu_{24}
+\end{align*}
+
+$H_1:$ The group means of blood lead levels of the two treatment groups are different at some time points.
+
+```{r hotelling}
+test14 = hotelling.test(.~assignment, data=data.TLC[,-1])
+test14
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+The test statistics is 112.01 and the p-value is smaller than 0.05. Therefore we reject the null hypothesis and conclude that the group means of blood lead levels of the two treatment groups are not the same across all time points under significance level of .05.
+
+### 2. Plasma inorganic phosphate measurements
+
+#### EDA
+
+```{r B_2}
+data.zer <- fread("ZERBE2.DAT")
+colnames(data.zer) <- c("group", "subject_id", "hour0", "hour0.5", "hour1", "hour1.5", "hour2", "hour3")
+head(data.zer)
+
+data.zer %>% 
+  mutate(group = as.factor(group)) %>%
+  pivot_longer(cols = starts_with("hour"),
+             names_to = "hours",
+             names_prefix = "hour",
+             values_to = "pip") %>%
+  ggplot(aes(x = hours, y = pip, group = group, color = group)) + 
+  geom_point(alpha = .5) + 
+  geom_path() + 
+  labs(
+    title = "Spaghetti Plot",
+    x = "Time (in hours)",
+    y = "Plasma inorganic phosphate"
+  ) + 
+  stat_summary(aes(group = 1), geom = "point", fun = mean,
+    shape = 17, size = 3, color = "black") + 
+  facet_grid(.~group)
+```
+The triangle in the above plot indicates the group mean at a specific time point. From the spaghetti plot above we found that the profiles among the two groups (1 = control, 2 = obese) are not parallel. The obese group tends to have a higher level of plasma inorganic phosphate at the baseline, but the two group tends to have the same plasma inorganic phosphate after 2-3 hours.
+
+(a) To test the null hypothesis that the group means are the same at all six measurement times. 
+
+```{r B_2_a}
+test.a = hotelling.test(.~group, data=data.zer[,-2])
+test.a
+```
+
+The p-value is very small. Therefore we reject the null hypothesis and conclude that the group means are not the same for all points in the six measurement times at a significance level of .05.
+
+(b) To test whether the profiles in the two groups are parallel
+
+```{r B_2_b}
+data.zer2 <- t(data.zer[,-c(1:2)])
+head(data.zer2)
+# contrast matrix
+cmat <- matrix(c(-1,1,0,0,0,0,
+                 0,-1,1,0,0,0,
+                 0,0,-1,1,0,0,
+                 0,0,0,-1,1,0,
+                 0,0,0,0,-1,1), ncol = 6, byrow = TRUE)
+cmat
+
+data.zer3 <- cmat %*% data.zer2
+data.zer3 <- t(data.zer3)
+data.zer3 <- cbind(data.zer[,1],data.zer3)
+
+head(data.zer3)
+test.b <- hotelling.test(.~group, data = data.zer3)
+
+test.b
+```
+The p-value is very small. Therefore we reject the null hypothesis and conclude that the profiles are not parallel for the two groups at a significance level of .05.
+
+(c) To test whether the differences in means at 2 and 3 hours after an oral glucose challenge are different between the control and obese patients.
+
+```{r B_2_c}
+# contrast matrix
+cmat.c <- t(c(0,0,0,0,-1,1))
+cmat.c
+
+data.zer4 <- cmat.c %*% data.zer2
+data.zer4 <- t(data.zer4)
+data.zer4 <- cbind(data.zer[,1],data.zer4)
+
+head(data.zer4)
+test.c <- hotelling.test(.~group, data = data.zer4)
+
+test.c
+```
+
+The p-value is 0.5231 > 0.05. Therefore we fail to reject the null hypothesis and conclude that there is no enough evidence showing that the differences in means at 2 and 3 hours after an oral glucose challenge are different between the control and obese patients.
+
